@@ -1,5 +1,14 @@
 """Public API surface of mcp-platform-core — a versioned contract (SemVer, see CLAUDE.md §4)."""
 
+from mcp_platform_core.middleware import (
+    InMemoryKeyStore,
+    InMemoryRateLimiter,
+    InMemoryResponseCache,
+    LoggingUsageSink,
+    MiddlewareDeps,
+    ToolExecutor,
+    build_tool_executor,
+)
 from mcp_platform_core.observability.logger import create_logger
 from mcp_platform_core.observability.metrics import (
     Metrics,
@@ -30,8 +39,13 @@ __version__ = "0.1.0"
 __all__ = [
     "TIER_RANK",
     "ApiKeyRecord",
+    "InMemoryKeyStore",
+    "InMemoryRateLimiter",
+    "InMemoryResponseCache",
     "KeyStore",
+    "LoggingUsageSink",
     "Metrics",
+    "MiddlewareDeps",
     "NullMetrics",
     "OtelMetrics",
     "PrometheusMetrics",
@@ -43,10 +57,12 @@ __all__ = [
     "TierError",
     "ToolContext",
     "ToolDefinition",
+    "ToolExecutor",
     "ToolRegistry",
     "UsageEvent",
     "UsageSink",
     "__version__",
     "build_metrics",
+    "build_tool_executor",
     "create_logger",
 ]
