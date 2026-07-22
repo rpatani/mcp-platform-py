@@ -1,0 +1,43 @@
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[dependency-groups]
+dev = [
+  "pytest>=8",
+  "pytest-asyncio>=0.24",
+  "respx>=0.21",
+  "ruff>=0.8",
+  "mypy>=1.13",
+  "pip-audit>=2.7",
+  "bandit>=1.7",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "ASYNC", "S", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S101", "S105", "S106"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["mcp_platform_core", "weather_mcp"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_ignores = true
+no_implicit_reexport = true
+plugins = ["pydantic.mypy"]
+mypy_path = ["packages/core/src", "packages/weather_mcp/src"]
+exclude = ["tests/"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-markers --strict-config"
+testpaths = ["packages/core/tests", "packages/weather_mcp/tests"]
+asyncio_mode = "auto"
