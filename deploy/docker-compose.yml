@@ -1,0 +1,35 @@
+# Demo stack: weather-mcp (HTTP, keyless free tools) + Prometheus. No secrets required.
+#   docker compose -f deploy/docker-compose.yml up --build
+services:
+  weather-mcp:
+    build:
+      context: ..
+      dockerfile: packages/weather_mcp/Dockerfile
+    environment:
+      MCP_TRANSPORT: http
+      MCP_HTTP_PORT: "8080"
+      MCP_HTTP_PATH: /mcp
+      MCP_METRICS_PORT: "9464"
+      MCP_KEYS_FILE: /app/keys.example.json
+      LOG_LEVEL: info
+    volumes:
+      - ../packages/weather_mcp/keys.example.json:/app/keys.example.json:ro
+    ports:
+      - "8080:8080"
+      - "9464:9464"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8080/healthz').status==200 else 1)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    depends_on:
+      weather-mcp:
+        condition: service_healthy
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
