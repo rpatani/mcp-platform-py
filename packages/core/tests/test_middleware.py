@@ -140,9 +140,7 @@ async def test_rate_limit_allows_then_rejects(
     assert usage_sink.events[-1].error_type == "RateLimitError"
 
 
-async def test_rate_limit_window_resets_after_60s(
-    deps: MiddlewareDeps, clock: FakeClock
-) -> None:
+async def test_rate_limit_window_resets_after_60s(deps: MiddlewareDeps, clock: FakeClock) -> None:
     tool = make_tool()
     execute = build_tool_executor(tool, deps)
 
