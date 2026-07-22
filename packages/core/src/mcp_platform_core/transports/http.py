@@ -113,6 +113,13 @@ async def run_http(
         )
         servers.append(metrics_server)
 
+    # Our own drain handler is authoritative. uvicorn captures signals per-server
+    # via capture_signals(); with two servers only the last-installed handler would
+    # win (and stop only that server). Neutralize it so our single loop handler
+    # drains both servers deterministically.
+    for srv in servers:
+        srv.capture_signals = contextlib.nullcontext  # type: ignore[assignment]
+
     _install_signal_handlers(readiness, servers, log)
 
     import asyncio
@@ -140,7 +147,10 @@ def _install_signal_handlers(
 
     def _drain() -> None:
         # Flip readiness to 503 first so a load balancer drains us, then let
-        # uvicorn finish in-flight requests before exiting.
+        # uvicorn finish in-flight requests before exiting. Idempotent: a second
+        # signal while draining is a no-op.
+        if not readiness["ready"]:
+            return
         log.info("graceful_shutdown_initiated")
         readiness["ready"] = False
         for server in servers:

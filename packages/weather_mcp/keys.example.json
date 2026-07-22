@@ -1,0 +1,12 @@
+{
+  "free-demo-key": {
+    "owner": "demo-free",
+    "tier": "free",
+    "rateLimitPerMinute": 60
+  },
+  "premium-demo-key": {
+    "owner": "demo-premium",
+    "tier": "premium",
+    "rateLimitPerMinute": 240
+  }
+}
