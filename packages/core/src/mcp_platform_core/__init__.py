@@ -1,5 +1,13 @@
 """Public API surface of mcp-platform-core — a versioned contract (SemVer, see CLAUDE.md §4)."""
 
+from mcp_platform_core.observability.logger import create_logger
+from mcp_platform_core.observability.metrics import (
+    Metrics,
+    NullMetrics,
+    OtelMetrics,
+    PrometheusMetrics,
+    build_metrics,
+)
 from mcp_platform_core.registry import ToolRegistry
 from mcp_platform_core.types import (
     TIER_RANK,
@@ -23,6 +31,10 @@ __all__ = [
     "TIER_RANK",
     "ApiKeyRecord",
     "KeyStore",
+    "Metrics",
+    "NullMetrics",
+    "OtelMetrics",
+    "PrometheusMetrics",
     "RateLimitError",
     "RateLimitResult",
     "RateLimiter",
@@ -35,4 +47,6 @@ __all__ = [
     "UsageEvent",
     "UsageSink",
     "__version__",
+    "build_metrics",
+    "create_logger",
 ]
