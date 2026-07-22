@@ -1,0 +1,30 @@
+[project]
+name = "mcp-platform-core"
+version = "0.1.0"
+description = "Generic, enterprise-grade MCP server infrastructure: registry, middleware, resilience, observability, transports."
+requires-python = ">=3.11"
+dependencies = [
+  "mcp>=1.10,<2",
+  "pydantic>=2.6,<3",
+  "pydantic-settings>=2.4,<3",
+  "httpx>=0.27,<1",
+  "structlog>=24.1",
+  "prometheus-client>=0.20,<1",
+  "starlette>=0.37",
+  "uvicorn>=0.30",
+  "tenacity>=8.5,<9",
+]
+
+[project.optional-dependencies]
+otel = [
+  "opentelemetry-api>=1.27",
+  "opentelemetry-sdk>=1.27",
+  "opentelemetry-exporter-prometheus>=0.48b0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp_platform_core"]
