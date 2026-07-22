@@ -18,6 +18,13 @@ from mcp_platform_core.observability.metrics import (
     build_metrics,
 )
 from mcp_platform_core.registry import ToolRegistry
+from mcp_platform_core.resilience import (
+    CircuitBreaker,
+    CircuitOpenError,
+    CircuitState,
+    ResilientCaller,
+    UpstreamTimeoutError,
+)
 from mcp_platform_core.types import (
     TIER_RANK,
     ApiKeyRecord,
@@ -39,6 +46,9 @@ __version__ = "0.1.0"
 __all__ = [
     "TIER_RANK",
     "ApiKeyRecord",
+    "CircuitBreaker",
+    "CircuitOpenError",
+    "CircuitState",
     "InMemoryKeyStore",
     "InMemoryRateLimiter",
     "InMemoryResponseCache",
@@ -52,6 +62,7 @@ __all__ = [
     "RateLimitError",
     "RateLimitResult",
     "RateLimiter",
+    "ResilientCaller",
     "ResponseCache",
     "Tier",
     "TierError",
@@ -59,6 +70,7 @@ __all__ = [
     "ToolDefinition",
     "ToolExecutor",
     "ToolRegistry",
+    "UpstreamTimeoutError",
     "UsageEvent",
     "UsageSink",
     "__version__",
