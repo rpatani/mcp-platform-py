@@ -25,6 +25,21 @@ deploy/         → docker-compose, prometheus.yml, smoke-test.sh
 Dependency direction is one-way: `app → core`. The three other apps
 (finance / github / ebay) live in their own repos and pin core by git tag.
 
+## Apps built on this core (Phase B)
+
+Three sibling repos consume `mcp-platform-core` as an external, tag-pinned
+library — each proving a different auth style:
+
+| Repo | Auth style | Tools |
+|---|---|---|
+| `finance-mcp` | server-side API key | CoinGecko + Frankfurter (free), Alpha Vantage (premium) |
+| `github-mcp` | static token + writes | repo/issue reads (free), issue writes (premium, never cached) |
+| `ebay-mcp` | OAuth 2 client-credentials | eBay Browse API (free + premium) |
+
+**[MANUAL-TESTING.md](MANUAL-TESTING.md)** is the step-by-step macOS guide for
+running and exercising all four servers locally, including the git-tag core
+dependency and the `file://` → GitHub URL switch when you push.
+
 ## Quickstart
 
 ```bash
