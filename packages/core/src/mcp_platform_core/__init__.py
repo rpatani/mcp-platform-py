@@ -1,5 +1,6 @@
 """Public API surface of mcp-platform-core — a versioned contract (SemVer, see CLAUDE.md §4)."""
 
+from mcp_platform_core.config import CoreConfig, load_key_store
 from mcp_platform_core.middleware import (
     InMemoryKeyStore,
     InMemoryRateLimiter,
@@ -51,6 +52,7 @@ __all__ = [
     "CircuitBreaker",
     "CircuitOpenError",
     "CircuitState",
+    "CoreConfig",
     "InMemoryKeyStore",
     "InMemoryRateLimiter",
     "InMemoryResponseCache",
@@ -80,6 +82,7 @@ __all__ = [
     "build_metrics",
     "build_tool_executor",
     "create_logger",
+    "load_key_store",
     "run_http",
     "run_stdio",
 ]
