@@ -143,7 +143,7 @@ def build_tool_executor(tool: ToolDefinition, deps: MiddlewareDeps) -> ToolExecu
             request_id=request_id,
             account=account,
             api_key=api_key,
-            resilient=deps.resilient,
+            resilient=deps.resilient.for_tool(tool.name),
             log=log,
         )
 
