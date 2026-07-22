@@ -25,6 +25,8 @@ from mcp_platform_core.resilience import (
     ResilientCaller,
     UpstreamTimeoutError,
 )
+from mcp_platform_core.server import build_mcp_server
+from mcp_platform_core.transports.http import run_http, run_stdio
 from mcp_platform_core.types import (
     TIER_RANK,
     ApiKeyRecord,
@@ -74,7 +76,10 @@ __all__ = [
     "UsageEvent",
     "UsageSink",
     "__version__",
+    "build_mcp_server",
     "build_metrics",
     "build_tool_executor",
     "create_logger",
+    "run_http",
+    "run_stdio",
 ]
