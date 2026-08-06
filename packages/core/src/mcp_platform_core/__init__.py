@@ -18,6 +18,7 @@ from mcp_platform_core.observability.metrics import (
     PrometheusMetrics,
     build_metrics,
 )
+from mcp_platform_core.observability.redaction import REDACTED, fingerprint, redact, scrub_text
 from mcp_platform_core.registry import ToolRegistry
 from mcp_platform_core.resilience import (
     CircuitBreaker,
@@ -44,9 +45,10 @@ from mcp_platform_core.types import (
     UsageSink,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
+    "REDACTED",
     "TIER_RANK",
     "ApiKeyRecord",
     "CircuitBreaker",
@@ -82,7 +84,10 @@ __all__ = [
     "build_metrics",
     "build_tool_executor",
     "create_logger",
+    "fingerprint",
     "load_key_store",
+    "redact",
     "run_http",
     "run_stdio",
+    "scrub_text",
 ]

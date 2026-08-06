@@ -8,21 +8,19 @@ from typing import Literal, cast
 import structlog
 from structlog.types import EventDict
 
-_REDACTED = "***REDACTED***"
-_SECRET_KEYS = frozenset(
-    {
-        "api_key",
-        "authorization",
-        "x-api-key",
-        "openweathermap_api_key",
-    }
-)
+from mcp_platform_core.observability.redaction import redact
 
 
 def _redact_secrets(logger: object, method_name: str, event_dict: EventDict) -> EventDict:
-    for key in event_dict:
-        if key.lower() in _SECRET_KEYS:
-            event_dict[key] = _REDACTED
+    """Last line of defence: every event passes through full recursive redaction.
+
+    Call sites are expected to redact too, but this processor is what makes it
+    safe for an app repo to log a dict it hasn't audited.
+    """
+    for key, value in event_dict.items():
+        if key in ("event", "level", "timestamp"):
+            continue
+        event_dict[key] = redact({key: value})[key]
     return event_dict
 
 

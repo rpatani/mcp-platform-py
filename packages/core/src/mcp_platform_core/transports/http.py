@@ -23,6 +23,7 @@ from starlette.routing import Mount, Route
 from starlette.types import Receive, Scope, Send
 
 from mcp_platform_core.observability.metrics import Metrics
+from mcp_platform_core.observability.redaction import fingerprint
 from mcp_platform_core.server import current_api_key
 
 
@@ -62,6 +63,7 @@ async def run_http(
     metrics: Metrics,
     metrics_port: int = 9464,
     log: structlog.BoundLogger,
+    log_level: str = "info",
 ) -> None:
     """Streamable HTTP transport with /healthz, /readyz, metrics port, graceful drain.
 
@@ -74,7 +76,17 @@ async def run_http(
     async def mcp_asgi(scope: Scope, receive: Receive, send: Send) -> None:
         # The transport's only auth job is extracting the credential; resolving it
         # into an ApiKeyRecord stays the middleware's job (step 1 of the fixed order).
-        token = current_api_key.set(_extract_api_key(scope))
+        api_key = _extract_api_key(scope)
+        token = current_api_key.set(api_key)
+        # HTTP-level view of the request, before any MCP framing is parsed. Headers
+        # are deliberately not logged: they carry the bearer credential.
+        log.debug(
+            "http_request_received",
+            path=scope.get("path"),
+            method=scope.get("method"),
+            api_key_fp=fingerprint(api_key),
+            client=(scope.get("client") or ("unknown", 0))[0],
+        )
         try:
             await session_manager.handle_request(scope, receive, send)
         finally:
@@ -103,13 +115,26 @@ async def run_http(
         lifespan=lifespan,
     )
 
-    main_server = uvicorn.Server(uvicorn.Config(app, host=host, port=port, log_level="warning"))
+    # Uvicorn stays quiet at info (its access log duplicates our structured
+    # per-call events); at debug it earns its place for connection-level issues.
+    debug = log_level.lower() == "debug"
+    uvicorn_level = "info" if debug else "warning"
+
+    main_server = uvicorn.Server(
+        uvicorn.Config(app, host=host, port=port, log_level=uvicorn_level, access_log=debug)
+    )
     servers = [main_server]
 
     if metrics.enabled():
         metrics_app = _build_metrics_app(metrics)
         metrics_server = uvicorn.Server(
-            uvicorn.Config(metrics_app, host=host, port=metrics_port, log_level="warning")
+            uvicorn.Config(
+                metrics_app,
+                host=host,
+                port=metrics_port,
+                log_level=uvicorn_level,
+                access_log=False,  # scrape traffic would drown the log
+            )
         )
         servers.append(metrics_server)
 
