@@ -1,6 +1,6 @@
 [project]
 name = "mcp-platform-core"
-version = "0.1.0"
+version = "0.2.0"
 description = "Generic, enterprise-grade MCP server infrastructure: registry, middleware, resilience, observability, transports."
 requires-python = ">=3.11"
 dependencies = [

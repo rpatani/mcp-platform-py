@@ -89,6 +89,7 @@ def main() -> None:
                     metrics=metrics,
                     metrics_port=config.metrics_port,
                     log=log,
+                    log_level=config.log_level,
                 )
         finally:
             await lib.aclose()

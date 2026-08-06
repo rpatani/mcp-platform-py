@@ -27,6 +27,7 @@ from typing import Any, Protocol
 import structlog
 
 from mcp_platform_core.observability.metrics import Metrics
+from mcp_platform_core.observability.redaction import fingerprint, redact, scrub_text
 from mcp_platform_core.resilience import ResilientCaller
 from mcp_platform_core.types import (
     TIER_RANK,
@@ -77,8 +78,17 @@ def build_tool_executor(tool: ToolDefinition, deps: MiddlewareDeps) -> ToolExecu
         start = time.monotonic()
         account = await deps.key_store.resolve(api_key)
         log = deps.logger.bind(
-            request_id=request_id, tool=tool.name, owner=account.owner, tier=account.tier
+            request_id=request_id,
+            tool=tool.name,
+            owner=account.owner,
+            tier=account.tier,
+            # Never the key itself — a stable hash is enough to correlate a
+            # caller's requests across log lines.
+            api_key_fp=fingerprint(api_key),
         )
+        # Request payload is debug-only: at info level these logs are an audit
+        # trail, not a packet capture.
+        log.debug("tool_call_started", args=redact(raw_args))
 
         async def _record_outcome(
             *,
@@ -120,9 +130,13 @@ def build_tool_executor(tool: ToolDefinition, deps: MiddlewareDeps) -> ToolExecu
                 await _record_outcome(
                     status="success", cost_units=0, success=True, cache_hit=True, error_type=None
                 )
-                log.info("tool_call_cache_hit")
+                # cache_key is a SHA-256 of tool+args, safe to log verbatim, and
+                # the only practical way to debug an unexpected hit or miss.
+                log.info("tool_call_cache_hit", cache_key=cache_key)
+                log.debug("tool_call_response", cached=True, response=redact(cached))
                 return cached
             deps.metrics.record_cache_event(tool.name, "miss")
+            log.debug("tool_call_cache_miss", cache_key=cache_key)
 
         rate_result = await deps.rate_limiter.check_and_increment(
             api_key or "anonymous", account.rate_limit_per_minute
@@ -138,7 +152,26 @@ def build_tool_executor(tool: ToolDefinition, deps: MiddlewareDeps) -> ToolExecu
             log.warning("tool_call_rejected", reason="rate_limit")
             raise RateLimitError(rate_result.retry_after_s)
 
-        parsed = tool.input_model.model_validate(raw_args)
+        try:
+            parsed = tool.input_model.model_validate(raw_args)
+        except Exception as exc:
+            # Validation failures used to escape unlogged and unmetered, so a
+            # client sending malformed args left no trace at all.
+            await _record_outcome(
+                status="error",
+                cost_units=0,
+                success=False,
+                cache_hit=False,
+                error_type=type(exc).__name__,
+            )
+            log.warning(
+                "tool_call_rejected",
+                reason="validation",
+                error_type=type(exc).__name__,
+                error=scrub_text(str(exc)),
+            )
+            raise
+
         ctx = ToolContext(
             request_id=request_id,
             account=account,
@@ -157,7 +190,16 @@ def build_tool_executor(tool: ToolDefinition, deps: MiddlewareDeps) -> ToolExecu
                 cache_hit=False,
                 error_type=type(exc).__name__,
             )
-            log.error("tool_call_failed", error_type=type(exc).__name__)
+            # The message is what tells "token missing" from "token lacks scope";
+            # scrub_text keeps a credential echoed back by an upstream out of it.
+            log.error(
+                "tool_call_failed",
+                error_type=type(exc).__name__,
+                error=scrub_text(str(exc)),
+            )
+            # Traceback only at debug — filtered out entirely at info, so this
+            # costs nothing in production.
+            log.debug("tool_call_failed_detail", args=redact(raw_args), exc_info=True)
             raise
 
         if cache_key is not None and tool.cache_ttl_ms is not None:
@@ -171,6 +213,7 @@ def build_tool_executor(tool: ToolDefinition, deps: MiddlewareDeps) -> ToolExecu
             error_type=None,
         )
         log.info("tool_call_succeeded")
+        log.debug("tool_call_response", cached=False, response=redact(result))
         return result
 
     return execute
