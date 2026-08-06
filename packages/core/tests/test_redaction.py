@@ -53,7 +53,7 @@ def test_scrubs_credential_shapes_from_free_text() -> None:
 
 def test_scrubs_bare_tokens_with_no_key_to_match_on() -> None:
     for secret in (
-        "github_pat_11ABRSKTY0GpEbyvqt74v6aaaaaaaaaaaaaaaaaaaa",
+        "github_pat_11EXAMPLE0000000000000_aaaaaaaaaaaaaaaaaaaa",
         "ghp_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "sk-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "AKIAIOSFODNN7EXAMPLE",
