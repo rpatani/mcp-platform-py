@@ -82,6 +82,7 @@ def test_build_metrics_prometheus_default() -> None:
 
 
 def test_build_metrics_otel() -> None:
+    pytest.importorskip("opentelemetry.sdk.metrics")
     metrics = build_metrics("otel", enabled=True)
     assert isinstance(metrics, OtelMetrics)
     assert metrics.enabled() is True
